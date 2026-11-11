@@ -1,0 +1,68 @@
+{% extends "layouts/app.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Task Entry{% endblock %}
+{% block heading %}Task Entry{% endblock %}
+{% block content %}
+<section class="panel glass electric electric-soft reveal-up">
+  <header class="panel-head">
+    <h3>{{ icon("entry") }} New Pend</h3>
+    <span class="chip">Fields marked * are required</span>
+  </header>
+  <form method="post" class="form form-grid" data-busy data-task-form novalidate>
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+
+    <label class="field">
+      <span class="field-label">Status</span>
+      <span class="field-box is-readonly"><input type="text" value="Pending" readonly tabindex="-1"></span>
+    </label>
+
+    <label class="field">
+      <span class="field-label">Inquiry Number *</span>
+      <span class="field-box">{{ icon("search") }}
+        <input type="text" name="inquiry_number" value="{{ form.get('inquiry_number', '') }}" maxlength="60" required
+               pattern="[A-Za-z0-9 _\-/#]+" autocomplete="off" spellcheck="false" autofocus>
+      </span>
+    </label>
+
+    <label class="field">
+      <span class="field-label">Sub Status</span>
+      <span class="field-box"><input type="text" name="sub_status" value="{{ form.get('sub_status', '') }}" maxlength="100"
+             placeholder="e.g. Awaiting provider docs" autocomplete="off"></span>
+    </label>
+
+    <label class="field">
+      <span class="field-label">Date Pended</span>
+      <span class="field-box">{{ icon("calendar") }}
+        <input type="date" name="date_pended" value="{{ form.get('date_pended') or today().isoformat() }}"
+               max="{{ today().isoformat() }}" data-default="{{ today().isoformat() }}" required>
+      </span>
+    </label>
+
+    <label class="field">
+      <span class="field-label">Assigned To</span>
+      <span class="field-box is-readonly"><input type="text" value="{{ profile_map.get('Associate Name') or profile_map.get('Domain') }}" readonly tabindex="-1"></span>
+    </label>
+
+    <label class="field">
+      <span class="field-label">Domain</span>
+      <span class="field-box is-readonly"><input type="text" value="{{ profile_map.get('Domain') }}" readonly tabindex="-1"></span>
+    </label>
+
+    <label class="field">
+      <span class="field-label">Manager</span>
+      <span class="field-box is-readonly"><input type="text" value="{{ profile_map.get('Manager Name') or '—' }}" readonly tabindex="-1"></span>
+    </label>
+
+    <label class="field field-full">
+      <span class="field-label">Remarks</span>
+      <textarea name="remarks" rows="6" maxlength="4000" class="textarea" placeholder="Describe the pend…" data-counter>{{ form.get('remarks', '') }}</textarea>
+      <small class="field-hint" data-counter-out>0 / 4000</small>
+    </label>
+
+    <div class="form-actions field-full">
+      <button type="reset" class="btn btn-ghost" data-clear>{{ icon("clear") }} Clear Form</button>
+      <button type="submit" class="btn btn-primary">{{ icon("save") }} Save</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

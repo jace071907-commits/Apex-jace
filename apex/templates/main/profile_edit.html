@@ -1,0 +1,42 @@
+{% extends "layouts/app.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Edit Profile{% endblock %}
+{% block heading %}Edit Profile{% endblock %}
+{% block content %}
+<section class="panel glass electric electric-soft reveal-up">
+  <header class="panel-head"><h3>{{ icon("edit") }} Update your information</h3></header>
+  <form method="post" class="form form-grid" data-busy novalidate>
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    {% for label in view %}
+    {% set shown = labels.get(label, label) %}
+    <label class="field">
+      <span class="field-label">{{ shown }}</span>
+      {% if label not in editable %}
+      <span class="field-box is-readonly"><input type="text" value="{{ values.get(label, '') }}" readonly tabindex="-1"></span>
+      {% elif label == 'Program' %}
+      <span class="field-box"><select name="Program">
+        <option value="">— Not assigned —</option>
+        {% for p in program_names %}
+        <option {{ 'selected' if (values.get('Program') or '') | upper == p }}>{{ p }}</option>
+        {% endfor %}
+        {% if values.get('Program') and (values.get('Program') | upper) not in program_names %}
+        <option selected>{{ values.get('Program') }}</option>
+        {% endif %}
+      </select></span>
+      {% else %}
+      <span class="field-box">
+        <input type="{{ 'email' if label == 'Email Address' else 'text' }}" name="{{ label }}" value="{{ values.get(label, '') }}"
+               maxlength="120" {{ 'required' if label in ('Associate Name', 'Email Address') }}
+               {% if label == 'Email Address' %}placeholder="firstname.lastname@carelon.com" data-carelon{% endif %}>
+      </span>
+      {% if label == 'Email Address' %}<p class="field-error" data-email-error hidden>Please enter a valid Carelon email address.</p>{% endif %}
+      {% endif %}
+    </label>
+    {% endfor %}
+    <div class="form-actions field-full">
+      <a href="{{ url_for('main.profile') }}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary">{{ icon("save") }} Save Profile</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

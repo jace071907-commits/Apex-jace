@@ -1,0 +1,60 @@
+{% extends "layouts/app.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}My Dashboard{% endblock %}
+{% block heading %}My Dashboard{% endblock %}
+{% block content %}
+{% if error %}<p class="banner banner-warn">{{ error }}</p>{% endif %}
+
+<form method="get" class="filter-bar glass reveal-up" data-view-form>
+  <div class="segmented" role="radiogroup" aria-label="View">
+    {% for v in views %}
+    <label class="segment"><input type="radio" name="view" value="{{ v }}" {{ 'checked' if view == v }} data-autosubmit><span>{{ v | capitalize }}</span></label>
+    {% endfor %}
+  </div>
+  {% if data %}
+  <label class="mini-field"><span>From</span><input type="date" name="from" value="{{ data['from'].isoformat() }}" max="{{ today().isoformat() }}"></label>
+  <label class="mini-field"><span>To</span><input type="date" name="to" value="{{ data['to'].isoformat() }}" max="{{ today().isoformat() }}"></label>
+  {% endif %}
+  <button class="btn btn-primary btn-sm" type="submit">{{ icon("filter") }} Apply</button>
+  {% if request.args %}<a class="btn btn-ghost btn-sm" href="{{ url_for('dia.dashboard') }}">Reset</a>{% endif %}
+</form>
+
+{% if data %}
+<section class="stats">
+  {% for label, key, ic, tone in [("Total Reviewed", "total", "shield", "cyan"), ("Total Valid", "valid", "done", "green"),
+                                    ("Total Invalid", "invalid", "warn", "red")] %}
+  <article class="stat glass tone-{{ tone }} reveal-up">
+    <div class="stat-icon">{{ icon(ic) }}</div>
+    <div><p class="stat-label">{{ label }}</p><p class="stat-value" data-count="{{ data.cards[key] }}">{{ data.cards[key] }}</p></div>
+  </article>
+  {% endfor %}
+  <article class="stat glass tone-violet reveal-up">
+    <div class="stat-icon">{{ icon("spark") }}</div>
+    <div><p class="stat-label">Valid Rate</p><p class="stat-value">{{ data.cards.rate }}%</p></div>
+  </article>
+</section>
+
+<script type="application/json" id="chart-data">{{ data.charts | tojson }}</script>
+<section class="chart-grid">
+  <article class="panel glass reveal-up">
+    <header class="panel-head"><h3>{{ icon("shield") }} Valid vs Invalid</h3></header>
+    <div class="chart chart-donut" data-chart="review" role="img" aria-label="Valid versus invalid reviews"></div>
+  </article>
+  <article class="panel glass reveal-up span-2">
+    <header class="panel-head"><h3>{{ icon("reports") }} Reviews per {{ {'daily': 'Day', 'weekly': 'Week', 'monthly': 'Month'}[view] }}</h3>
+      <span class="chip">{{ fmt_date(data['from']) }} – {{ fmt_date(data['to']) }}</span></header>
+    <div class="chart" data-chart="trend" data-kind="stacked" role="img" aria-label="Reviews over time"></div>
+  </article>
+</section>
+
+<section class="panel glass reveal-up">
+  <header class="panel-head"><h3>{{ icon("activity") }} Summary</h3></header>
+  <ul class="kv kv-grid">
+    <li><span>Period</span><strong>{{ fmt_date(data['from']) }} – {{ fmt_date(data['to']) }}</strong></li>
+    <li><span>View</span><strong>{{ view | capitalize }} · {{ data.summary.periods }} period{{ 's' if data.summary.periods != 1 }}</strong></li>
+    <li><span>Average per {{ {'daily': 'day', 'weekly': 'week', 'monthly': 'month'}[view] }}</span><strong>{{ data.summary.average }}</strong></li>
+    <li><span>Busiest {{ {'daily': 'day', 'weekly': 'week', 'monthly': 'month'}[view] }}</span><strong>{{ data.summary.busiest }}{% if data.summary.busiest_count %} ({{ data.summary.busiest_count }}){% endif %}</strong></li>
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

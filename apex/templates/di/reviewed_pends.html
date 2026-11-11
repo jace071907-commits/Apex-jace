@@ -1,0 +1,63 @@
+{% extends "layouts/app.html" %}
+{% from "_macros.html" import icon %}
+{% from "di/_badges.html" import status_pill, review_pill %}
+{% block title %}Reviewed Pends{% endblock %}
+{% block heading %}Reviewed Pends{% endblock %}
+{% block content %}
+{% set keep = {} %}{% for k, v in filters.items() if v %}{% set _ = keep.update({k: v}) %}{% endfor %}
+
+<form method="get" class="filter-bar glass reveal-up" role="search">
+  <label class="search glass-pill grow">{{ icon("search") }}
+    <input type="search" name="q" value="{{ filters.q }}" placeholder="Search by Inquiry Number" aria-label="Inquiry Number filter">
+  </label>
+  <label class="mini-field"><span>Review</span>
+    <select name="review">
+      <option value="">All reviewed</option>
+      <option value="Valid" {{ 'selected' if filters.review == 'Valid' }}>Valid</option>
+      <option value="Invalid" {{ 'selected' if filters.review == 'Invalid' }}>Invalid</option>
+      <option value="unacknowledged" {{ 'selected' if filters.review == 'unacknowledged' }}>Needs acknowledgement</option>
+    </select>
+  </label>
+  <button class="btn btn-primary btn-sm" type="submit">{{ icon("filter") }} Apply</button>
+  {% if keep %}<a class="btn btn-ghost btn-sm" href="{{ url_for('di.reviewed_pends') }}">Reset</a>{% endif %}
+</form>
+
+{% if error %}<p class="banner banner-warn">{{ error }}</p>{% endif %}
+
+{% if rows %}
+<section class="review-list">
+  {% for r in rows %}
+  <article class="review-card glass {{ 'electric electric-soft needs-ack' if r._needs_ack }} reveal-up">
+    <header>
+      <div>
+        <p class="muted small-cap">Inquiry Number</p>
+        <h3>{{ r.INQUIRY_NUMBER }}</h3>
+      </div>
+      <div class="pill-row">{{ status_pill(r.STATUS) }} {{ review_pill(r.PEND_REVIEW) }}</div>
+    </header>
+    <dl class="review-meta">
+      <div><dt>Reviewer</dt><dd>{{ r.REVIEWER or '—' }}</dd></div>
+      <div><dt>Date Reviewed</dt><dd>{{ fmt_date(r.DATE_REVIEWED) or '—' }}</dd></div>
+      <div class="span-2"><dt>Reviewer Remarks</dt><dd>{{ r.REVIEWER_REMARKS or '—' }}</dd></div>
+    </dl>
+    <footer>
+      {% if r._needs_ack %}
+      <form method="post" action="{{ url_for('di.acknowledge', pend_id=r._id, **keep) }}" data-busy>
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-danger">{{ icon("check") }} ACKNOWLEDGE</button>
+      </form>
+      <span class="muted small">Acknowledgement required for invalid reviews.</span>
+      {% elif r._review == 'invalid' %}
+      <span class="ack-done">{{ icon("done") }} Acknowledged {{ fmt_datetime(r.ACKNOWLEDGED_AT) }}</span>
+      {% else %}
+      <span class="ack-done ok">{{ icon("done") }} No action needed</span>
+      {% endif %}
+    </footer>
+  </article>
+  {% endfor %}
+</section>
+{% else %}
+<section class="panel glass reveal-up"><div class="empty">{{ icon("shield", "icon icon-xl") }}<p>No reviewed pends yet.</p>
+  <small class="muted">Reviewer feedback on your pends will appear here.</small></div></section>
+{% endif %}
+{% endblock %}

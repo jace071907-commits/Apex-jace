@@ -1,0 +1,57 @@
+{% extends "layouts/app.html" %}
+{% from "_macros.html" import icon %}
+{% from "di/_badges.html" import status_pill %}
+{% block title %}Pend Reports{% endblock %}
+{% block heading %}Pend Reports{% endblock %}
+{% block content %}
+<form method="get" class="filter-bar glass reveal-up" role="search">
+  <label class="search glass-pill grow">{{ icon("search") }}
+    <input type="search" name="q" value="{{ filters.q }}" placeholder="Search by Inquiry Number" aria-label="Search by Inquiry Number">
+  </label>
+  {% for key, label in [('manager', 'Manager'), ('assigned_to', 'Assigned To'), ('sub_status', 'Sub Status')] %}
+  <label class="mini-field"><span>{{ label }}</span>
+    <select name="{{ key }}">
+      <option value="">All</option>
+      {% for v in options[key] %}<option{{ ' selected' if filters[key] == v }}>{{ v }}</option>{% endfor %}
+      {% if filters[key] and filters[key] not in options[key] %}<option selected>{{ filters[key] }}</option>{% endif %}
+    </select>
+  </label>
+  {% endfor %}
+  <button class="btn btn-primary btn-sm" type="submit">{{ icon("filter") }} Apply</button>
+  {% if keep %}<a class="btn btn-ghost btn-sm" href="{{ url_for('dia.pend_reports') }}">Reset</a>{% endif %}
+</form>
+
+{% if error %}<p class="banner banner-warn">{{ error }}</p>{% endif %}
+
+<section class="panel glass reveal-up">
+  <header class="panel-head">
+    <h3>{{ icon("records") }} Pends Awaiting Review</h3>
+    <div class="head-actions">
+      <span class="chip">{{ rows | length }} record{{ 's' if rows | length != 1 }}</span>
+      {% include "di_admin/_export.html" %}
+    </div>
+  </header>
+  {% if rows %}
+  <div class="table-wrap">
+    <table class="table table-select">
+      <thead><tr><th>Inquiry Number</th><th>Status</th><th>Assigned To</th><th>Manager</th><th>Domain</th><th>Date Pended</th><th>Sub Status</th></tr></thead>
+      <tbody>
+      {% for r in rows %}
+        <tr>
+          <td><a class="row-link" href="{{ url_for('dia.review', pend_id=r._id, **keep) }}" title="Open review">{{ r.INQUIRY_NUMBER }}</a></td>
+          <td>{{ status_pill(r.STATUS) }}</td>
+          <td>{{ r.ASSIGNED_TO or '—' }}</td>
+          <td>{{ r.MANAGER or '—' }}</td>
+          <td>{{ r.DOMAIN or '—' }}</td>
+          <td>{{ fmt_date(r.DATE_PENDED) or '—' }}</td>
+          <td>{% if r.SUB_STATUS %}<span class="pill pill-muted">{{ r.SUB_STATUS }}</span>{% else %}—{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">{{ icon("done", "icon icon-xl") }}<p>{{ 'No pends match these filters.' if keep else 'All caught up — no pends are waiting for review.' }}</p></div>
+  {% endif %}
+</section>
+{% endblock %}

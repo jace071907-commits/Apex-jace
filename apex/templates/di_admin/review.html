@@ -1,0 +1,97 @@
+{% extends "layouts/app.html" %}
+{% from "_macros.html" import icon %}
+{% from "di/_badges.html" import status_pill, review_pill, status_chip %}
+{% set editing = mode == 'edit' %}
+{% set extra_tab = {"label": ("Edit Review · " if editing else "Review · ") ~ record.INQUIRY_NUMBER,
+                    "icon": "edit" if editing else "shield", "close_url": cancel_url} %}
+{% block title %}{{ 'Edit Review' if editing else 'Review' }} {{ record.INQUIRY_NUMBER }}{% endblock %}
+{% block heading %}{{ 'Edit Review' if editing else 'Review' }}{% endblock %}
+{% block content %}
+<div class="split has-detail">
+  <section class="panel glass reveal-up">
+    <header class="panel-head">
+      <h3>{{ icon("records") }} Inquiry {{ record.INQUIRY_NUMBER }}</h3>
+      <span class="pill-row">{{ status_pill(record.STATUS) }}{% if editing %} {{ review_pill(record.PEND_REVIEW) }}{% endif %}</span>
+    </header>
+    <dl class="detail-grid">
+      {% for label, val in record._details %}
+      <div class="{{ 'span-2' if label in ('Remarks', 'Last Note', 'Reviewer Remarks') }}"><dt>{{ label }}</dt><dd>{{ val if val not in (none, '') else '—' }}</dd></div>
+      {% endfor %}
+      {% if editing %}
+      <div><dt>Acknowledged</dt><dd>{{ ('Yes · ' ~ fmt_datetime(record.ACKNOWLEDGED_AT)) if record.ACKNOWLEDGED else ('Pending' if record._review == 'invalid' else 'Not required') }}</dd></div>
+      {% endif %}
+    </dl>
+  </section>
+
+  <section class="panel glass electric electric-soft detail reveal-up">
+    <header class="panel-head"><h3>{{ icon("edit" if editing else "shield") }} {{ 'Update Review' if editing else 'Review Form' }}</h3></header>
+    <form method="post" action="{{ action }}" class="form" data-busy novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      {% set chosen = form.get('pend_review', defaults.review) %}
+      {% if editing %}
+      <dl class="current-review">
+        <div><dt>Status</dt><dd>{{ status_chip(record.STATUS) }}</dd></div>
+        <div><dt>Pend Review</dt><dd>{{ status_chip(record.PEND_REVIEW) }}</dd></div>
+        <div><dt>Reviewer</dt><dd>{{ record.REVIEWER or '—' }}</dd></div>
+        <div><dt>Date Reviewed</dt><dd>{{ fmt_date(record.DATE_REVIEWED) or '—' }}</dd></div>
+        <div class="span-2"><dt>Reviewer Remarks</dt><dd>{{ record.REVIEWER_REMARKS or '—' }}</dd></div>
+      </dl>
+      {% endif %}
+      <div class="form-grid">
+        {% if editing %}
+        {% set chosen_status = form.get('status', defaults.status) %}
+        <label class="field">
+          <span class="field-label">Status *</span>
+          <span class="field-box">{{ icon("records") }}<select name="status" required>
+            {% for s in status_options %}<option{{ ' selected' if chosen_status == s }}>{{ s }}</option>{% endfor %}
+          </select></span>
+        </label>
+        {% endif %}
+        <label class="field">
+          <span class="field-label">Pend Review *</span>
+          <span class="field-box">{{ icon("shield") }}<select name="pend_review" required data-review-select>
+            <option value="" {{ 'selected' if not chosen }} disabled>Select…</option>
+            {% for v in ['Valid', 'Invalid'] %}<option{{ ' selected' if chosen == v }}>{{ v }}</option>{% endfor %}
+          </select></span>
+        </label>
+        {% if editing %}
+        <label class="field">
+          <span class="field-label">Reviewer</span>
+          <span class="field-box is-readonly">{{ icon("user") }}<input type="text" value="{{ record.REVIEWER or '' }}" readonly tabindex="-1"></span>
+        </label>
+        <label class="field">
+          <span class="field-label">Date Reviewed</span>
+          <span class="field-box is-readonly">{{ icon("calendar") }}<input type="date" value="{{ defaults.date }}" readonly tabindex="-1"></span>
+        </label>
+        {% else %}
+        <label class="field">
+          <span class="field-label">Reviewer Name *</span>
+          <span class="field-box">{{ icon("user") }}<input type="text" name="reviewer" value="{{ form.get('reviewer', defaults.reviewer) }}" maxlength="120" required></span>
+        </label>
+        <label class="field">
+          <span class="field-label">Reviewer Domain</span>
+          <span class="field-box is-readonly"><input type="text" value="{{ defaults.domain }}" readonly tabindex="-1"></span>
+        </label>
+        <label class="field">
+          <span class="field-label">Date Reviewed *</span>
+          <span class="field-box">{{ icon("calendar") }}<input type="date" name="date_reviewed" value="{{ form.get('date_reviewed', defaults.date) }}"
+                 max="{{ today().isoformat() }}" required></span>
+        </label>
+        {% endif %}
+      </div>
+      <label class="field">
+        <span class="field-label">Reviewer Remarks *</span>
+        <textarea name="reviewer_remarks" rows="6" maxlength="4000" class="textarea" required data-counter
+                  placeholder="Explain why this pend is Valid or Invalid…">{{ form.get('reviewer_remarks', defaults.remarks or '') }}</textarea>
+        <small class="field-hint" data-counter-out>0 / 4000</small>
+      </label>
+      {% if editing %}<p class="field-hint">Changing the result or remarks asks the associate to acknowledge again (for Invalid reviews).
+        Setting Status to Completed removes the pend from Reviewed Pends.</p>{% endif %}
+      <div class="form-actions">
+        <a class="btn btn-ghost" href="{{ cancel_url }}">Cancel</a>
+        <button type="submit" class="btn btn-primary">{{ icon("save") }} {{ 'Update Review' if editing else 'Save Review' }}</button>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

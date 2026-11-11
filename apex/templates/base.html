@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ prefs.mode if prefs else 'dark' }}" data-accent="{{ prefs.accent if prefs else 'blue' }}"
+      data-electric="{{ 'off' if prefs and not prefs.electric_border else 'on' }}"
+      data-orientation="{{ prefs.orientation if prefs else 'landscape' }}"{% if prefs %} data-prefs="server"{% endif %}>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}APEX{% endblock %} · APEX</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/apex.png') }}">
+  <script src="{{ url_for('static', filename='js/theme-init.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/apex.css') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <svg class="svg-defs" aria-hidden="true" focusable="false" width="0" height="0">
+    <defs>
+      <filter id="electric" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="3" result="noise">
+          <animate attributeName="seed" values="1;2;3;4;5;6;7;8;9;10" dur="0.9s" repeatCount="indefinite"/>
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="7" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="grid-overlay" aria-hidden="true"></div>
+
+  {% block body %}{% endblock %}
+
+  <script src="{{ url_for('static', filename='js/apex.js') }}" defer></script>
+</body>
+</html>

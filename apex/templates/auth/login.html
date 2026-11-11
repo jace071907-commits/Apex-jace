@@ -1,0 +1,43 @@
+{% extends "auth/_shell.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Sign In{% endblock %}
+{% block card %}
+<header class="card-head">
+  <h1>Welcome to APEX</h1>
+  <p class="muted">Sign in with your network domain credentials.</p>
+</header>
+
+<div class="tabs" role="tablist" data-tabs>
+  <button type="button" role="tab" class="tab {{ 'active' if portal == 'associate' }}" data-portal="associate"
+          aria-selected="{{ 'true' if portal == 'associate' else 'false' }}">{{ icon("user") }} Associate Login</button>
+  <button type="button" role="tab" class="tab {{ 'active' if portal == 'admin' }}" data-portal="admin"
+          aria-selected="{{ 'true' if portal == 'admin' else 'false' }}">{{ icon("shield") }} Admin Login</button>
+  <span class="tab-glider" aria-hidden="true"></span>
+</div>
+
+<form method="post" action="{{ url_for('auth.login', next=request.args.get('next')) }}" class="form" autocomplete="on" novalidate data-busy>
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <input type="hidden" name="portal" value="{{ portal }}" data-portal-input>
+
+  <label class="field">
+    <span class="field-label">Username</span>
+    <span class="field-box">{{ icon("user") }}
+      <input type="text" name="username" value="{{ username }}" placeholder="Domain ID" autocomplete="username"
+             autocapitalize="characters" spellcheck="false" required autofocus>
+    </span>
+  </label>
+
+  <label class="field">
+    <span class="field-label">Password</span>
+    <span class="field-box">{{ icon("lock") }}
+      <input type="password" name="password" placeholder="Password" autocomplete="current-password" required>
+      <button type="button" class="reveal" data-reveal aria-label="Show password">{{ icon("eye") }}</button>
+    </span>
+  </label>
+
+  <button type="submit" class="btn btn-primary btn-block">
+    <span data-portal-label>{{ 'Sign in as Admin' if portal == 'admin' else 'Sign in as Associate' }}</span>
+  </button>
+</form>
+<p class="hint muted">First time signing in? Use the temporary password provided to you. You'll be asked to set up your account.</p>
+{% endblock %}

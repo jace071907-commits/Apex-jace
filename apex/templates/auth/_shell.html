@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "_macros.html" import flashes, theme_toggle, icon %}
+{% block body_class %}auth-page{% endblock %}
+{% block body %}
+<div class="auth-topbar">{{ theme_toggle() }}</div>
+
+<main class="auth-wrap">
+  <section class="brand-frame electric" aria-label="APEX">
+    <div class="brand-inner glass">
+      <img src="{{ url_for('static', filename='img/apex.png') }}" alt="APEX" class="brand-logo">
+    </div>
+  </section>
+
+  <section class="auth-card glass electric electric-soft">
+    {% block card %}{% endblock %}
+  </section>
+
+  <footer class="powered">
+    <span class="powered-label">Powered By</span>
+    <img src="{{ url_for('static', filename='img/ignite.png') }}" alt="Ignite" class="powered-logo">
+    <span class="powered-name">Jace</span>
+  </footer>
+</main>
+{{ flashes() }}
+{% endblock %}

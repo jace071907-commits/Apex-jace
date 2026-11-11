@@ -1,0 +1,55 @@
+{% extends "layouts/app.html" %}
+{% from "_macros.html" import icon %}
+{% from "di/_badges.html" import status_chip %}
+{% block title %}Reviewed Pends{% endblock %}
+{% block heading %}Reviewed Pends{% endblock %}
+{% block content %}
+<form method="get" class="filter-bar glass reveal-up" role="search">
+  <label class="search glass-pill grow">{{ icon("search") }}
+    <input type="search" name="q" value="{{ filters.q }}" placeholder="Search by Inquiry Number" aria-label="Search by Inquiry Number">
+  </label>
+  <label class="mini-field"><span>Pend Review</span>
+    <select name="review">
+      <option value="">All</option>
+      {% for v in ['Valid', 'Invalid'] %}<option{{ ' selected' if filters.review == v }}>{{ v }}</option>{% endfor %}
+    </select>
+  </label>
+  <button class="btn btn-primary btn-sm" type="submit">{{ icon("filter") }} Apply</button>
+  {% if keep %}<a class="btn btn-ghost btn-sm" href="{{ url_for('dia.reviewed') }}">Reset</a>{% endif %}
+</form>
+
+{% if error %}<p class="banner banner-warn">{{ error }}</p>{% endif %}
+
+<section class="panel glass reveal-up">
+  <header class="panel-head">
+    <h3>{{ icon("shield") }} My Reviews</h3>
+    <div class="head-actions">
+      <span class="chip">{{ rows | length }} review{{ 's' if rows | length != 1 }}</span>
+      {% include "di_admin/_export.html" %}
+    </div>
+  </header>
+  {% if rows %}
+  <div class="table-wrap">
+    <table class="table table-select">
+      <thead><tr><th>Inquiry Number</th><th>Status</th><th>Pend Review</th><th>Reviewer</th><th>Date Reviewed</th><th>Reviewer Remarks</th><th>Acknowledged</th></tr></thead>
+      <tbody>
+      {% for r in rows %}
+        <tr>
+          <td><a class="row-link" href="{{ url_for('dia.edit_review', pend_id=r._id, **keep) }}" title="Edit review">{{ r.INQUIRY_NUMBER }}</a></td>
+          <td>{{ status_chip(r.STATUS) }}</td>
+          <td>{{ status_chip(r.PEND_REVIEW) }}</td>
+          <td>{{ r.REVIEWER or '—' }}</td>
+          <td>{{ fmt_date(r.DATE_REVIEWED) or '—' }}</td>
+          <td class="cell-wrap">{{ r.REVIEWER_REMARKS or '—' }}</td>
+          <td>{% if r._review != 'invalid' %}<span class="muted">—</span>{% elif r.ACKNOWLEDGED %}<span class="pill pill-green">Yes</span>{% else %}<span class="pill pill-amber">Awaiting</span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">{{ icon("shield", "icon icon-xl") }}<p>{{ 'No reviews match these filters.' if keep else "You haven't reviewed any pends yet." }}</p>
+    {% if not keep %}<a class="link" href="{{ url_for('dia.pend_reports') }}">Go to Pend Reports</a>{% endif %}</div>
+  {% endif %}
+</section>
+{% endblock %}

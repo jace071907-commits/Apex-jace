@@ -1,0 +1,45 @@
+{% extends "layouts/app.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Administration{% endblock %}
+{% block heading %}Administration{% endblock %}
+{% block content %}
+<section class="stats">
+  <article class="stat glass tone-cyan reveal-up">
+    <div class="stat-icon">{{ icon("profile") }}</div>
+    <div><p class="stat-label">Masterlist Employees</p>
+      <p class="stat-value" {% if total is not none %}data-count="{{ total }}"{% endif %}>{{ total if total is not none else '—' }}</p></div>
+  </article>
+  {% set ns = namespace(assoc=0) %}
+  {% for r in rows %}{% if (r.get(role_col) or '')|trim|lower == 'associate' %}{% set ns.assoc = ns.assoc + 1 %}{% endif %}{% endfor %}
+  <article class="stat glass tone-violet reveal-up">
+    <div class="stat-icon">{{ icon("user") }}</div>
+    <div><p class="stat-label">Associates</p><p class="stat-value" data-count="{{ ns.assoc }}">{{ ns.assoc }}</p></div>
+  </article>
+  <article class="stat glass tone-green reveal-up">
+    <div class="stat-icon">{{ icon("shield") }}</div>
+    <div><p class="stat-label">Leaders &amp; Support</p><p class="stat-value" data-count="{{ rows|length - ns.assoc }}">{{ rows|length - ns.assoc }}</p></div>
+  </article>
+</section>
+
+<section class="panel glass reveal-up">
+  <header class="panel-head">
+    <h3>{{ icon("admin") }} Employee Masterlist</h3>
+    <label class="search glass-pill">{{ icon("search") }}<input type="search" placeholder="Search…" data-table-filter="#masterlist" aria-label="Search masterlist"></label>
+  </header>
+  {% if error %}
+  <p class="banner banner-warn">{{ error }}</p>
+  {% elif rows %}
+  <div class="table-wrap">
+    <table class="table" id="masterlist">
+      <thead><tr>{% for c in columns %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for r in rows %}<tr>{% for c in columns %}<td>{{ r.get(c) if r.get(c) is not none else '' }}</td>{% endfor %}</tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if total and total > rows|length %}<p class="muted small">Showing first {{ rows|length }} of {{ total }} records.</p>{% endif %}
+  {% else %}
+  <div class="empty"><p>No employees found.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

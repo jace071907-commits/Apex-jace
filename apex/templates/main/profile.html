@@ -1,0 +1,23 @@
+{% extends "layouts/app.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Profile{% endblock %}
+{% block heading %}Profile{% endblock %}
+{% block content %}
+{% set name = profile_map.get('Associate Name') or profile_map.get('Domain') or '' %}
+<section class="profile-hero glass electric electric-soft reveal-up">
+  <div class="avatar avatar-xl">{{ name[:1] | upper or '?' }}</div>
+  <div class="grow">
+    <h2>{{ name }}</h2>
+    <p class="muted">{{ current_role }}{% if profile_map.get('Program') %} · {{ profile_map.get('Program') }}{% endif %}</p>
+  </div>
+  <a href="{{ url_for('main.profile_edit') }}" class="btn btn-primary">{{ icon("edit") }} Edit</a>
+</section>
+<section class="panel glass reveal-up">
+  <header class="panel-head"><h3>{{ icon("profile") }} Employee Information</h3></header>
+  <dl class="profile-grid">
+    {% for label, val in fields %}
+    <div class="profile-item"><dt>{{ label }}</dt><dd>{{ val or '—' }}</dd></div>
+    {% endfor %}
+  </dl>
+</section>
+{% endblock %}

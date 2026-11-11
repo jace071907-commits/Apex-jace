@@ -1,0 +1,177 @@
+{% extends "layouts/app.html" %}
+{% from "_macros.html" import icon %}
+{% from "di/_badges.html" import status_chip %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Executive Dashboard{% endblock %}
+
+{% macro sort_head(key, label) -%}
+{% set active = f.sort == key %}
+{% set next_dir = 'asc' if active and f.dir == 'desc' else 'desc' %}
+<th aria-sort="{{ ('ascending' if f.dir == 'asc' else 'descending') if active else 'none' }}">
+  <a class="sort-link {{ 'is-active' if active }}" href="{{ url_for(self_endpoint, **query_args(f, sort=key, dir=next_dir, page=None)) }}#report">
+    {{ label }}<span class="sort-caret">{{ ('▲' if f.dir == 'asc' else '▼') if active else '↕' }}</span>
+  </a>
+</th>
+{%- endmacro %}
+
+{% block content %}
+<section class="sk-plate reveal-up">
+  <div class="sk-plate-head">
+    <div>
+      <p class="eyebrow">Disputes and Intakes · Enterprise view</p>
+      <h2>Operational Overview</h2>
+      <p class="muted">All records in the Pend table{% if data %} · <strong>{{ data.total }}</strong> record{{ 's' if data.total != 1 }}{% if filtered %} match the current filters{% endif %}{% endif %}.</p>
+    </div>
+    <span class="sk-led {{ 'sk-led-on' if not error }}" title="{{ 'Live data' if not error else 'Offline' }}"><i></i>{{ 'Live' if not error else 'Offline' }}</span>
+  </div>
+
+  <form method="get" class="sk-filters" data-auto-refresh role="search" aria-label="Dashboard filters">
+    {% for key, label in [('manager', 'Manager'), ('assigned_to', 'Assigned To'), ('sub_status', 'Sub Status')] %}
+    <label class="sk-field"><span>{{ label }}</span>
+      <select name="{{ key }}">
+        <option value="">All</option>
+        {% for v in options[key] %}<option{{ ' selected' if f[key] == v }}>{{ v }}</option>{% endfor %}
+        {% if f[key] and f[key] not in options[key] %}<option selected>{{ f[key] }}</option>{% endif %}
+      </select>
+    </label>
+    {% endfor %}
+    <label class="sk-field"><span>Date Pended From</span><input type="date" name="from" value="{{ f['from'].isoformat() if f['from'] else '' }}"></label>
+    <label class="sk-field"><span>Date Pended To</span><input type="date" name="to" value="{{ f['to'].isoformat() if f['to'] else '' }}"></label>
+    {% if f.q %}<input type="hidden" name="q" value="{{ f.q }}">{% endif %}
+    <div class="sk-filter-actions">
+      <button type="submit" class="btn btn-primary btn-sm">{{ icon("filter") }} Apply</button>
+      {% if filtered %}<a class="btn btn-ghost btn-sm" href="{{ url_for(self_endpoint) }}">Reset</a>{% endif %}
+    </div>
+  </form>
+</section>
+
+{% if error %}<p class="banner banner-warn">{{ error }}</p>{% endif %}
+
+{% if data %}
+<section class="sk-kpis">
+  {% for key, label, ic, tone, hint in [
+    ("pending", "Total Pending", "pending", "orange", "STATUS = Pending"),
+    ("completed", "Total Completed", "done", "green", "STATUS = Completed"),
+    ("valid", "Total Valid", "check", "emerald", "PEND_REVIEW = Valid"),
+    ("invalid", "Total Invalid", "warn", "red", "PEND_REVIEW = Invalid"),
+  ] %}
+  {% set card = data.cards[key] %}
+  <article class="sk-kpi tone-{{ tone }} reveal-up">
+    <div class="sk-kpi-top">
+      <span class="sk-knob">{{ icon(ic) }}</span>
+      <span class="sk-kpi-share">{{ card.share }}%</span>
+    </div>
+    <p class="sk-kpi-label">{{ label }}</p>
+    <p class="sk-kpi-value" data-count="{{ card.value }}">{{ card.value }}</p>
+    <div class="sk-groove" role="img" aria-label="{{ card.share }}% of records"><span class="sk-fill sk-fill-{{ (card.share // 5) * 5 }}"></span></div>
+    <p class="sk-kpi-hint">{{ hint }}</p>
+  </article>
+  {% endfor %}
+</section>
+
+<script type="application/json" id="chart-data">{{ data.charts | tojson }}</script>
+<section class="sk-charts">
+  <article class="sk-panel reveal-up">
+    <header class="sk-panel-head"><h3>{{ icon("pending") }} Pending vs Completed</h3></header>
+    <div class="sk-well"><div class="chart chart-donut" data-chart="status_split" data-kind="donut" data-center="pends" role="img" aria-label="Pending versus completed"></div></div>
+  </article>
+  <article class="sk-panel reveal-up">
+    <header class="sk-panel-head"><h3>{{ icon("shield") }} Valid vs Invalid</h3></header>
+    <div class="sk-well"><div class="chart chart-donut" data-chart="review_split" data-kind="donut" data-center="reviewed" role="img" aria-label="Valid versus invalid"></div></div>
+  </article>
+  <article class="sk-panel reveal-up">
+    <header class="sk-panel-head"><h3>{{ icon("grid") }} Status Distribution</h3></header>
+    <div class="sk-well"><div class="chart chart-donut" data-chart="distribution" data-kind="donut" data-center="total" role="img" aria-label="Status distribution"></div></div>
+  </article>
+  <article class="sk-panel sk-span-2 reveal-up">
+    <header class="sk-panel-head"><h3>{{ icon("reports") }} Manager Performance Breakdown</h3>
+      {% if data.managers | length > 12 %}<span class="chip">Top 12 of {{ data.managers | length }}</span>{% endif %}</header>
+    <div class="sk-well"><div class="chart chart-hbars" data-chart="managers" data-kind="hbars" role="img" aria-label="Manager performance"></div></div>
+  </article>
+  <article class="sk-panel reveal-up">
+    <header class="sk-panel-head"><h3>{{ icon("activity") }} Review Trend by Date</h3>
+      <span class="chip">{{ fmt_date(data.trend_range[0]) }} – {{ fmt_date(data.trend_range[1]) }}</span></header>
+    <div class="sk-well"><div class="chart" data-chart="trend" data-kind="stacked" role="img" aria-label="Reviews per day"></div></div>
+  </article>
+</section>
+
+<section class="sk-panel reveal-up">
+  <header class="sk-panel-head"><h3>{{ icon("profile") }} Manager Analytics</h3><span class="chip">{{ data.managers | length }} manager{{ 's' if data.managers | length != 1 }}</span></header>
+  {% if data.managers %}
+  <div class="sk-managers">
+    {% for m in data.managers %}
+    <article class="sk-mgr">
+      <header><span class="sk-avatar">{{ m.name[:1] | upper }}</span><div><strong>{{ m.name }}</strong><small class="muted">{{ m.total }} pend{{ 's' if m.total != 1 }} · {{ m.completion }}% completed</small></div></header>
+      <dl>
+        <div class="tone-orange"><dt>Pending</dt><dd>{{ m.pending }}</dd></div>
+        <div class="tone-green"><dt>Completed</dt><dd>{{ m.completed }}</dd></div>
+        <div class="tone-emerald"><dt>Valid</dt><dd>{{ m.valid }}</dd></div>
+        <div class="tone-red"><dt>Invalid</dt><dd>{{ m.invalid }}</dd></div>
+      </dl>
+      <div class="sk-groove sk-groove-thin" role="img" aria-label="{{ m.completion }}% completed"><span class="sk-fill sk-fill-{{ (m.completion // 5) * 5 }}"></span></div>
+      {% if m.valid_rate is not none %}<small class="muted">Valid rate {{ m.valid_rate }}%</small>{% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty"><p>No records match these filters.</p></div>
+  {% endif %}
+</section>
+
+<section class="sk-panel reveal-up" id="report">
+  <header class="sk-panel-head">
+    <h3>{{ icon("records") }} Pend Report</h3>
+    <div class="head-actions">
+      <form method="get" class="inline-search" role="search" action="{{ url_for(self_endpoint) }}#report">
+        {% for k, v in query_args(f, q=None, page=None).items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+        <label class="search glass-pill">{{ icon("search") }}<input type="search" name="q" value="{{ f.q }}" placeholder="Search report…" aria-label="Search report"></label>
+      </form>
+      <details class="export">
+        <summary class="btn btn-ghost btn-sm">{{ icon("save") }} Export to Excel</summary>
+        <div class="export-menu glass">
+          <a href="{{ url_for(export_endpoint, scope='filtered', **query_args(f, page=None)) }}" download>
+            {{ icon("filter") }}<span><strong>Export Filtered Results</strong><small class="muted">{{ data.total }} record{{ 's' if data.total != 1 }} · all columns</small></span>
+          </a>
+          <a href="{{ url_for(export_endpoint, scope='all') }}" download>
+            {{ icon("records") }}<span><strong>Export Entire Pend Table</strong><small class="muted">Every record · all columns</small></span>
+          </a>
+        </div>
+      </details>
+    </div>
+  </header>
+  {% if data.report %}
+  <div class="table-wrap sk-table-wrap">
+    <table class="table sk-table">
+      <thead><tr>{% for key, label in columns %}{{ sort_head(key, label) }}{% endfor %}</tr></thead>
+      <tbody>
+        {% for r in data.report %}
+        <tr>
+          <td><strong>{{ r.INQUIRY_NUMBER or '—' }}</strong></td>
+          <td>{{ status_chip(r.STATUS) }}</td>
+          <td class="cell-wrap">{{ r.REMARKS or '—' }}</td>
+          <td>{{ r.ASSIGNED_TO or '—' }}</td>
+          <td>{{ r.SUB_STATUS or '—' }}</td>
+          <td>{{ r.MANAGER or '—' }}</td>
+          <td>{% if r.PEND_REVIEW %}{{ status_chip(r.PEND_REVIEW) }}{% else %}<span class="muted">—</span>{% endif %}</td>
+          <td>{{ r.REVIEWER or '—' }}</td>
+          <td class="cell-wrap">{{ r.REVIEWER_REMARKS or '—' }}</td>
+          <td>{{ fmt_date(r.DATE_REVIEWED) or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <nav class="sk-pager" aria-label="Report pages">
+    <span class="muted">Showing {{ (data.page - 1) * 25 + 1 }}–{{ [data.page * 25, data.total] | min }} of {{ data.total }}</span>
+    <div>
+      {% if data.page > 1 %}<a class="btn btn-ghost btn-sm" href="{{ url_for(self_endpoint, **query_args(f, page=data.page - 1)) }}#report">‹ Prev</a>{% endif %}
+      <span class="sk-page">Page {{ data.page }} of {{ data.pages }}</span>
+      {% if data.page < data.pages %}<a class="btn btn-ghost btn-sm" href="{{ url_for(self_endpoint, **query_args(f, page=data.page + 1)) }}#report">Next ›</a>{% endif %}
+    </div>
+  </nav>
+  {% else %}
+  <div class="empty">{{ icon("records", "icon icon-xl") }}<p>{{ 'No records match your search or filters.' if filtered else 'The Pend table has no records yet.' }}</p></div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

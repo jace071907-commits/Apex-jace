@@ -1,0 +1,27 @@
+{% extends "auth/_shell.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Register Email{% endblock %}
+{% block card %}
+{% include "auth/_steps.html" %}
+<header class="card-head">
+  <h1>Register your email</h1>
+  <p class="muted">Enter your company email in the format <strong>firstname.lastname@carelon.com</strong>.</p>
+</header>
+
+<form method="post" class="form" novalidate data-busy>
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <label class="field">
+    <span class="field-label">Company Email Address</span>
+    <span class="field-box">{{ icon("mail") }}
+      <input type="email" name="email" value="{{ email }}" placeholder="firstname.lastname@carelon.com"
+             autocomplete="email" spellcheck="false" required data-carelon>
+    </span>
+  </label>
+  <p class="field-error" data-email-error hidden>Please enter a valid Carelon email address.</p>
+  <button type="submit" class="btn btn-primary btn-block">Register Email &amp; Finish</button>
+</form>
+<form method="post" action="{{ url_for('auth.logout') }}" class="inline-form">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <button type="submit" class="link-btn">Cancel and sign out</button>
+</form>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "auth/_shell.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Account Created{% endblock %}
+{% block card %}
+{% include "auth/_steps.html" %}
+<div class="success">
+  <div class="success-badge">{{ icon("check") }}</div>
+  <h1>Account Successfully Created</h1>
+  <p class="muted">Your password and Carelon email have been saved. You can now access APEX.</p>
+  <a href="{{ url_for('main.programs') }}" class="btn btn-primary btn-block">Continue</a>
+</div>
+{% endblock %}

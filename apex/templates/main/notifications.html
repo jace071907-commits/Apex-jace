@@ -1,0 +1,28 @@
+{% extends "layouts/app.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Notifications{% endblock %}
+{% block heading %}Notifications{% endblock %}
+{% block content %}
+<section class="panel glass reveal-up">
+  <header class="panel-head">
+    <h3>{{ icon("bell") }} Notification History</h3>
+    {% if unread %}<button type="button" class="btn btn-ghost btn-sm" data-notif-readall data-reload>Mark all {{ unread }} as read</button>{% endif %}
+  </header>
+  {% if items %}
+  <ul class="notif-history">
+    {% for n in items %}
+    <li class="notif-item kind-{{ n.kind }} {{ 'unread' if not n.is_read }}">
+      <span class="notif-dot"></span>
+      <div>
+        <p><strong>{{ n.title }}</strong></p>
+        {% if n.message %}<p class="muted">{{ n.message }}</p>{% endif %}
+        <small class="muted">{{ n.when }}</small>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="empty">{{ icon("bell", "icon icon-xl") }}<p>No notifications yet.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% macro status_pill(value) -%}
+{% set v = (value or '') | lower %}
+<span class="pill {{ 'pill-green' if v == 'completed' else 'pill-amber' if v == 'pending' else 'pill-muted' }}">{{ value or '—' }}</span>
+{%- endmacro %}
+
+{# Admin Reviewed Pends palette: Pending=orange, Open=blue, In Progress=purple, Completed=green,
+   Valid=emerald, Invalid=red. #}
+{% macro status_chip(value) -%}
+{% set v = (value or '') | lower | replace('-', ' ') | trim %}
+{% set tone = {'pending': 'orange', 'open': 'blue', 'in progress': 'purple', 'completed': 'green',
+               'valid': 'emerald', 'invalid': 'red'}.get(v, 'muted') %}
+<span class="chip-status chip-{{ tone }}">{{ value or '—' }}</span>
+{%- endmacro %}
+
+{% macro review_pill(value) -%}
+{% set v = (value or '') | lower %}
+<span class="pill {{ 'pill-green' if v == 'valid' else 'pill-red' if v == 'invalid' else 'pill-muted' }}">{{ value or 'Not reviewed' }}</span>
+{%- endmacro %}

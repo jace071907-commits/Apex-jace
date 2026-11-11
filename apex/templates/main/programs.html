@@ -1,0 +1,42 @@
+{% extends "layouts/app.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Select Program{% endblock %}
+{% block heading %}Program Selection{% endblock %}
+{% block content %}
+<section class="program-stage glass electric reveal-up">
+  <header class="program-head">
+    <p class="eyebrow" data-greeting>Welcome</p>
+    <h2>{{ profile_map.get('Associate Name') or profile_map.get('Domain') }}</h2>
+    <p class="muted">
+      {% if assigned %}Your program is <strong>{{ programs | selectattr('key', 'equalto', assigned) | map(attribute='name') | first }}</strong>.
+      {% else %}No program is assigned to your profile. Select a program to continue.{% endif %}
+    </p>
+  </header>
+
+  <form method="post" class="program-form" data-program-form>
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <div class="program-grid" role="radiogroup" aria-label="Programs">
+      {% for p in programs %}
+      {% set active = is_active(p.key) %}
+      {% set mine = assigned == p.key %}
+      {% set selectable = active and (not assigned or mine) %}
+      <label class="program-card glass {{ 'is-glow' if mine or not assigned }} {{ 'is-disabled' if not selectable }}">
+        <input type="radio" name="program" value="{{ p.key }}" {{ 'checked' if mine and active }} {{ 'disabled' if not selectable }}
+               data-program-option>
+        <span class="program-logo"><img src="{{ url_for('static', filename='img/' ~ p.image) }}" alt=""></span>
+        <span class="program-name">{{ p.name }}</span>
+        {% if mine %}<span class="chip chip-glow">Your Program</span>{% endif %}
+        {% if not active %}<span class="chip chip-muted">Coming soon</span>{% endif %}
+      </label>
+      {% endfor %}
+    </div>
+    {% set can_continue = (not assigned) or is_active(assigned) %}
+    {% if not can_continue %}
+    <p class="banner banner-warn">Your program module is not available yet. Please check back soon.</p>
+    {% endif %}
+    <button type="submit" class="btn btn-primary btn-wide" data-program-continue {{ 'disabled' if not can_continue }}>
+      Continue {{ icon("arrow") }}
+    </button>
+  </form>
+</section>
+{% endblock %}

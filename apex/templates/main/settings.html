@@ -1,0 +1,58 @@
+{% extends "layouts/app.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Settings{% endblock %}
+{% block heading %}Settings{% endblock %}
+{% block content %}
+<form method="post" class="settings-form" data-settings-form data-busy>
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+
+  <section class="panel glass reveal-up">
+    <header class="panel-head"><h3>{{ icon("spark") }} Electric Border Animation</h3></header>
+    <label class="switch-row">
+      <span><strong>Enable electric borders</strong><small class="muted">Animated glowing borders on cards and containers.</small></span>
+      <input type="checkbox" name="electric_border" class="switch" {{ 'checked' if prefs.electric_border }} data-pref="electric">
+    </label>
+  </section>
+
+  <section class="panel glass reveal-up">
+    <header class="panel-head"><h3>{{ icon("settings") }} Theme Selection</h3></header>
+    <div class="swatches" role="radiogroup" aria-label="Accent theme">
+      {% for a in accents %}
+      <label class="swatch swatch-{{ a }}">
+        <input type="radio" name="accent" value="{{ a }}" {{ 'checked' if prefs.accent == a }} data-pref="accent">
+        <span class="swatch-dot"></span><span>{{ a | capitalize }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="panel glass reveal-up">
+    <header class="panel-head"><h3>{{ icon("moon") }} Theme Mode</h3></header>
+    <div class="choice-row" role="radiogroup" aria-label="Theme mode">
+      {% for m in modes %}
+      <label class="choice glass">
+        <input type="radio" name="mode" value="{{ m }}" {{ 'checked' if prefs.mode == m }} data-pref="theme">
+        {{ icon('sun' if m == 'light' else 'moon', 'icon icon-lg') }}<span>{{ m | capitalize }} Mode</span>
+      </label>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="panel glass reveal-up">
+    <header class="panel-head"><h3>{{ icon("grid") }} Screen Orientation</h3></header>
+    <div class="choice-row" role="radiogroup" aria-label="Screen orientation">
+      {% for o in orientations %}
+      <label class="choice glass">
+        <input type="radio" name="orientation" value="{{ o }}" {{ 'checked' if prefs.orientation == o }} data-pref="orientation">
+        <span class="orient orient-{{ o }}" aria-hidden="true"></span><span>{{ o | capitalize }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </section>
+
+  <div class="form-actions sticky-actions">
+    <span class="muted small">Settings are saved to your account and follow you on any device.</span>
+    <button type="submit" class="btn btn-primary">{{ icon("save") }} Save Settings</button>
+  </div>
+</form>
+{% endblock %}

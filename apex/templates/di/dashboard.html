@@ -1,0 +1,92 @@
+{% extends "layouts/app.html" %}
+{% from "_macros.html" import icon %}
+{% from "di/_badges.html" import status_pill, review_pill %}
+{% block title %}My Dashboard{% endblock %}
+{% block heading %}My Dashboard{% endblock %}
+{% block content %}
+{% if error %}<p class="banner banner-warn">{{ error }}</p>{% endif %}
+{% if data %}
+<section class="stats stats-5">
+  {% for label, key, ic, tone in [
+    ("Total Pends", "total", "total", "cyan"),
+    ("Pending Pends", "pending", "pending", "amber"),
+    ("Completed Pends", "completed", "done", "green"),
+    ("Valid Pends", "valid", "check", "violet"),
+    ("Invalid Pends", "invalid", "warn", "red"),
+  ] %}
+  <article class="stat glass tone-{{ tone }} reveal-up">
+    <div class="stat-icon">{{ icon(ic) }}</div>
+    <div><p class="stat-label">{{ label }}</p><p class="stat-value" data-count="{{ data.cards[key] }}">{{ data.cards[key] }}</p></div>
+  </article>
+  {% endfor %}
+</section>
+
+<script type="application/json" id="chart-data">{{ data.charts | tojson }}</script>
+<section class="chart-grid">
+  <article class="panel glass reveal-up">
+    <header class="panel-head"><h3>{{ icon("shield") }} Valid vs Invalid</h3></header>
+    <div class="chart chart-donut" data-chart="review" role="img" aria-label="Valid versus invalid pends"></div>
+  </article>
+  <article class="panel glass reveal-up span-2">
+    <header class="panel-head"><h3>{{ icon("reports") }} Monthly Pend Trend</h3><span class="chip">Last 12 months</span></header>
+    <div class="chart" data-chart="monthly" role="img" aria-label="Monthly pend trend"></div>
+  </article>
+  <article class="panel glass reveal-up span-3">
+    <header class="panel-head"><h3>{{ icon("calendar") }} Pends by Date</h3><span class="chip">Last 30 days</span></header>
+    <div class="chart" data-chart="daily" role="img" aria-label="Pends by date"></div>
+  </article>
+</section>
+{% endif %}
+
+<section class="panel glass reveal-up">
+  <header class="panel-head">
+    <h3>{{ icon("history") }} Pend History</h3>
+    <form method="get" role="search" class="inline-search">
+      <label class="search glass-pill">{{ icon("search") }}
+        <input type="search" name="q" value="{{ q }}" placeholder="Inquiry Number" aria-label="Search history by Inquiry Number">
+      </label>
+      {% if q %}<a class="link" href="{{ url_for('di.dashboard') }}">Clear</a>{% endif %}
+    </form>
+  </header>
+
+  {% if q %}
+    {% if records %}
+    <div class="history-records">
+      {% for r in records %}
+      <article class="history-record glass">
+        <header><strong>{{ r.INQUIRY_NUMBER }}</strong><span class="pill-row">{{ status_pill(r.STATUS) }} {{ review_pill(r.PEND_REVIEW) }}</span></header>
+        <dl class="detail-grid compact">
+          {% for label, val in r._details %}
+          <div class="{{ 'span-2' if label in ('Remarks', 'Last Note', 'Reviewer Remarks') }}"><dt>{{ label }}</dt><dd>{{ val if val not in (none, '') else '—' }}</dd></div>
+          {% endfor %}
+        </dl>
+        <a class="link" href="{{ url_for('di.update_pends', id=r._id) }}">Open in Update Pends →</a>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty"><p>No pends match “{{ q }}”.</p></div>
+    {% endif %}
+  {% endif %}
+
+  {% if events %}
+  <h4 class="timeline-title">{{ 'Activity for “' ~ q ~ '”' if q else 'Recent activity' }}</h4>
+  <ol class="timeline">
+    {% for e in events %}
+    <li class="tl-{{ (e.action or '') | lower | replace(' ', '-') }}">
+      <span class="tl-dot"></span>
+      <div class="tl-body">
+        <p><strong>{{ e.action }}</strong> · Inquiry {{ e.inquiry_number or '—' }}
+          {% if e.status %}{{ status_pill(e.status) }}{% endif %}
+          {% if e.details and e.details.review %}{{ review_pill(e.details.review) }}{% endif %}</p>
+        {% if e.note %}<p class="tl-note">{{ e.note }}</p>{% endif %}
+        <small class="muted">{{ fmt_datetime(e.created_at) }}{% if e.changed_by %} · by {{ e.changed_by }}{% endif %}</small>
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+  {% elif not q %}
+  <div class="empty">{{ icon("history", "icon icon-xl") }}<p>No pend activity yet.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

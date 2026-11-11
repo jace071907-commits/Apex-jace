@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, flashes, theme_toggle %}
+{% block body_class %}app-page{% endblock %}
+{% block body %}
+{% set display_name = profile_map.get('Associate Name') or profile_map.get('Domain') or '' %}
+<div class="shell" data-shell>
+  <aside class="sidebar glass" id="sidebar" aria-label="Main navigation">
+    <a href="{{ url_for('main.programs') }}" class="sidebar-brand electric electric-soft glass" aria-label="APEX home">
+      <img src="{{ url_for('static', filename='img/apex.png') }}" alt="APEX">
+    </a>
+    {% if current_program %}<p class="sidebar-program">{{ current_program.name }}{% if portal == 'admin' %}<span>Admin</span>{% endif %}</p>{% endif %}
+    <nav class="nav">
+      {% for item in nav_items %}
+      {% set active = request.endpoint == item.endpoint or request.endpoint in (item.match or []) %}
+      <a href="{{ url_for(item.endpoint) }}" class="nav-link {{ 'active' if active }}" {% if active %}aria-current="page"{% endif %}>
+        {{ icon(item.icon) }}<span>{{ item.label }}</span>
+        {% if item.badge == 'unacknowledged' and unacknowledged %}<span class="nav-badge" title="Invalid reviews to acknowledge">{{ unacknowledged }}</span>{% endif %}
+        {% if item.badge == 'queue' and review_queue %}<span class="nav-badge nav-badge-info" title="Pends awaiting review">{{ review_queue }}</span>{% endif %}
+      </a>
+      {% endfor %}
+      <form method="post" action="{{ url_for('auth.logout') }}" class="nav-form">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <button type="submit" class="nav-link nav-logout">{{ icon("logout") }}<span>Logout</span></button>
+      </form>
+    </nav>
+  </aside>
+  <div class="sidebar-scrim" data-scrim></div>
+
+  <div class="main">
+    <header class="topbar glass">
+      <button type="button" class="glass-pill menu-btn" data-menu aria-controls="sidebar" aria-label="Open menu">{{ icon("menu") }}</button>
+      <div class="topbar-title">
+        <span class="crumb muted">{{ current_program.name if current_program else 'APEX' }}</span>
+        <h1>{% block heading %}{% endblock %}</h1>
+      </div>
+      <div class="topbar-actions">
+        <div class="brand-strip" aria-label="Partner brands">
+          <img class="for-light" src="{{ url_for('static', filename='img/cb.png') }}" alt="Carelon">
+          <img class="for-light" src="{{ url_for('static', filename='img/ct.png') }}" alt="Clinical Tower">
+          <img class="for-light" src="{{ url_for('static', filename='img/pi-black.png') }}" alt="PI">
+          <img class="for-dark" src="{{ url_for('static', filename='img/cw.png') }}" alt="Carelon">
+          <img class="for-dark" src="{{ url_for('static', filename='img/ctw.png') }}" alt="Clinical Tower">
+          <img class="for-dark" src="{{ url_for('static', filename='img/pi-white.png') }}" alt="PI">
+          <img src="{{ url_for('static', filename='img/ignite.png') }}" alt="Ignite">
+        </div>
+        <div class="notif" data-notif data-endpoint="{{ url_for('main.api_notifications') }}"
+             data-read-endpoint="{{ url_for('main.api_notifications_read') }}">
+          <button type="button" class="glass-pill notif-btn" data-notif-toggle aria-haspopup="true" aria-expanded="false" aria-label="Notifications">
+            {{ icon("bell") }}<span class="notif-count" data-notif-count hidden>0</span>
+          </button>
+          <div class="notif-panel glass" data-notif-panel hidden>
+            <header>
+              <strong>Notifications</strong>
+              <button type="button" class="link-btn" data-notif-readall>Mark all read</button>
+            </header>
+            <ul class="notif-list" data-notif-list><li class="notif-empty muted">Loading…</li></ul>
+            <a class="notif-all" href="{{ url_for('main.notification_history') }}">View notification history {{ icon("arrow") }}</a>
+          </div>
+        </div>
+        {{ theme_toggle() }}
+        <a href="{{ url_for('main.profile') }}" class="user-chip glass-pill">
+          <span class="avatar">{{ display_name[:1] | upper or '?' }}</span>
+          <span class="user-meta"><strong>{{ display_name }}</strong><small>{{ current_role }}</small></span>
+        </a>
+      </div>
+    </header>
+
+    <main class="content" id="content">
+      {% if module_tabs and request.blueprint in module_blueprints %}
+      <nav class="module-tabs glass" aria-label="Module tabs">
+        {% for tab in module_tabs %}
+        <a href="{{ url_for(tab.endpoint) }}" class="module-tab {{ 'active' if request.endpoint == tab.endpoint and not extra_tab }}">
+          {{ icon(tab.icon) }}<span>{{ tab.label }}</span>
+          {% if tab.endpoint == 'di.reviewed_pends' and unacknowledged %}<span class="nav-badge">{{ unacknowledged }}</span>{% endif %}
+          {% if tab.endpoint == 'dia.pend_reports' and review_queue %}<span class="nav-badge nav-badge-info">{{ review_queue }}</span>{% endif %}
+        </a>
+        {% endfor %}
+        {% if extra_tab %}
+        <span class="module-tab active module-tab-extra" aria-current="page">
+          {{ icon(extra_tab.icon) }}<span>{{ extra_tab.label }}</span>
+          <a href="{{ extra_tab.close_url }}" class="tab-close" aria-label="Close {{ extra_tab.label }} tab">&times;</a>
+        </span>
+        {% endif %}
+      </nav>
+      {% if unacknowledged and request.endpoint != 'di.reviewed_pends' %}
+      <a class="banner banner-danger" href="{{ url_for('di.reviewed_pends', review='unacknowledged') }}">
+        {{ icon("warn") }} You have {{ unacknowledged }} invalid review{{ 's' if unacknowledged != 1 }} that must be acknowledged. Review now →
+      </a>
+      {% endif %}
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{{ flashes() }}
+{% endblock %}

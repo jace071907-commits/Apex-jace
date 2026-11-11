@@ -1,0 +1,14 @@
+{% from "_macros.html" import icon %}
+{% set scope = 'reviewed' if request.endpoint == 'dia.reviewed' else 'reports' %}
+<details class="export">
+  <summary class="btn btn-ghost btn-sm">{{ icon("save") }} Export to Excel</summary>
+  <div class="export-menu glass">
+    <a href="{{ url_for('dia.export', scope=scope, **keep) }}" download>
+      {{ icon("filter") }}<span><strong>Export Filtered Results</strong>
+      <small class="muted">{{ 'Your reviews' if scope == 'reviewed' else 'Pend Reports' }}{{ ' with current filters' if keep else ' (current view)' }}</small></span>
+    </a>
+    <a href="{{ url_for('dia.export', scope='all') }}" download>
+      {{ icon("records") }}<span><strong>Export All</strong><small class="muted">Every record in the Pend table</small></span>
+    </a>
+  </div>
+</details>

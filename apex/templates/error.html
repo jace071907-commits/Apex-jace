@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_macros.html" import theme_toggle %}
+{% block title %}{{ title }}{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+{% block body %}
+<div class="auth-topbar">{{ theme_toggle() }}</div>
+<main class="auth-wrap">
+  <section class="auth-card glass electric electric-soft error-card">
+    <p class="error-code">{{ code }}</p>
+    <h1>{{ title }}</h1>
+    <p class="muted">{{ message }}</p>
+    <a class="btn btn-primary" href="{{ url_for('main.index') }}">Return to APEX</a>
+  </section>
+</main>
+{% endblock %}
