@@ -1,21 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "functions": {
-    "api/index.py": {
-      "includeFiles": "apex/**",
-      "maxDuration": 15
-    }
-  },
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index" }
-  ],
-  "headers": [
+  "builds": [
     {
-      "source": "/static/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=86400" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" }
-      ]
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": { "includeFiles": ["apex/**", "public/**"] }
     }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "api/index.py" }
   ]
 }
