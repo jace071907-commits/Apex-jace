@@ -34,15 +34,6 @@
         <h1>{% block heading %}{% endblock %}</h1>
       </div>
       <div class="topbar-actions">
-        <div class="brand-strip" aria-label="Partner brands">
-          <img class="for-light" src="{{ url_for('static', filename='img/cb.png') }}" alt="Carelon">
-          <img class="for-light" src="{{ url_for('static', filename='img/ct.png') }}" alt="Clinical Tower">
-          <img class="for-light" src="{{ url_for('static', filename='img/pi-black.png') }}" alt="PI">
-          <img class="for-dark" src="{{ url_for('static', filename='img/cw.png') }}" alt="Carelon">
-          <img class="for-dark" src="{{ url_for('static', filename='img/ctw.png') }}" alt="Clinical Tower">
-          <img class="for-dark" src="{{ url_for('static', filename='img/pi-white.png') }}" alt="PI">
-          <img src="{{ url_for('static', filename='img/ignite.png') }}" alt="Ignite">
-        </div>
         <div class="notif" data-notif data-endpoint="{{ url_for('main.api_notifications') }}"
              data-read-endpoint="{{ url_for('main.api_notifications_read') }}">
           <button type="button" class="glass-pill notif-btn" data-notif-toggle aria-haspopup="true" aria-expanded="false" aria-label="Notifications">
