@@ -25,11 +25,9 @@
       </select></span>
       {% else %}
       <span class="field-box">
-        <input type="{{ 'email' if label == 'Email Address' else 'text' }}" name="{{ label }}" value="{{ values.get(label, '') }}"
-               maxlength="120" {{ 'required' if label in ('Associate Name', 'Email Address') }}
-               {% if label == 'Email Address' %}placeholder="firstname.lastname@carelon.com" data-carelon{% endif %}>
+        <input type="text" name="{{ label }}" value="{{ values.get(label, '') }}"
+               maxlength="120" {{ 'required' if label == 'Associate Name' }}>
       </span>
-      {% if label == 'Email Address' %}<p class="field-error" data-email-error hidden>Please enter a valid Carelon email address.</p>{% endif %}
       {% endif %}
     </label>
     {% endfor %}
