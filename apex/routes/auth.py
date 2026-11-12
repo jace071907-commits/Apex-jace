@@ -131,7 +131,7 @@ def setup_email():
     email = request.form.get("email", users.email_of(g.user_row)).strip().lower()
     if request.method == "POST":
         if not is_carelon_email(email):
-            flash("Please enter a valid Carelon email address.", "error")
+            flash("Please enter a valid company email address.", "error")
         else:
             domain = users.domain_of(g.user_row)
             try:
