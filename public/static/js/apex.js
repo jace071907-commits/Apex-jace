@@ -83,8 +83,8 @@
     confirmField.addEventListener("input", check);
   }
 
-  /* ---------- Carelon email ---------- */
-  $$("[data-carelon]").forEach(function (email) {
+  /* ---------- company email (accepted domain is enforced on the server too) ---------- */
+  $$("[data-company-email]").forEach(function (email) {
     var err = $("[data-email-error]", email.form);
     var re = /^[a-z][a-z'-]*(?:\.[a-z0-9][a-z0-9'-]*)+@carelon\.com$/;
     email.form.addEventListener("submit", function (e) {
