@@ -5,15 +5,16 @@ from flask import Blueprint, abort, flash, g, jsonify, redirect, render_template
 
 from .. import notifications, preferences, programs, users
 from ..config import Config
-from ..security import current_auth, is_carelon_email, login_required
-from ..supabase import SupabaseError, supabase
+from ..security import current_auth, login_required
+from ..supabase import SupabaseError
 
 bp = Blueprint("main", __name__)
 log = logging.getLogger(__name__)
 
 # Profile fields the user may edit (label -> PROFILE_FIELDS label). Domain is the identity and stays read-only.
-PROFILE_VIEW = ["Associate Name", "Employee Number", "Domain", "Program", "Manager Name", "Email Address"]
-PROFILE_EDITABLE = ["Associate Name", "Employee Number", "Program", "Manager Name", "Email Address"]
+# Email Address is intentionally not shown or editable on the Profile page; it is set during account setup.
+PROFILE_VIEW = ["Associate Name", "Employee Number", "Domain", "Program", "Manager Name"]
+PROFILE_EDITABLE = ["Associate Name", "Employee Number", "Program", "Manager Name"]
 PROFILE_LABELS = {"Manager Name": "Manager"}
 MAX_FIELD = 120
 
@@ -76,8 +77,6 @@ def profile_edit():
             error = f"Each field must be {MAX_FIELD} characters or fewer."
         elif "Associate Name" in submitted and not submitted["Associate Name"]:
             error = "Associate Name is required."
-        elif "Email Address" in submitted and not is_carelon_email(submitted["Email Address"]):
-            error = "Please enter a valid Carelon email address."
         elif submitted.get("Program") and submitted["Program"] not in program_names \
                 and submitted["Program"] != values.get("Program"):
             error = "Please choose a valid program."
@@ -85,11 +84,9 @@ def profile_edit():
             flash(error, "error")
             values.update(submitted)
         else:
-            if "Email Address" in submitted:
-                submitted["Email Address"] = submitted["Email Address"].lower()
             def changed(label, new):
                 old = values.get(label) or ""
-                return new.casefold() != old.casefold() if label in ("Program", "Email Address") else new != old
+                return new.casefold() != old.casefold() if label == "Program" else new != old
 
             changes = {columns[l]: (v or None) for l, v in submitted.items() if changed(l, v)}
             if changes:
@@ -103,12 +100,6 @@ def profile_edit():
                                            program_names=program_names, labels=PROFILE_LABELS, view=PROFILE_VIEW)
                 if columns.get("Program") in changes:
                     session.pop("program", None)
-                if columns.get("Email Address") in changes:
-                    try:
-                        supabase.admin_update_user(users.auth_user_id(_domain()), {"user_metadata": {
-                            "domain": _domain(), "role": g.role, "carelon_email": submitted["Email Address"]}})
-                    except SupabaseError as exc:
-                        log.warning("Auth metadata sync failed: %s", exc)
             flash("Profile updated." if changes else "No changes to save.", "success")
             return redirect(url_for("main.profile"))
     return render_template("main/profile_edit.html", values=values, editable=editable, program_names=program_names,
