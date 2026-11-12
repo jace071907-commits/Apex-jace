@@ -5,7 +5,7 @@
 {% include "auth/_steps.html" %}
 <header class="card-head">
   <h1>Register your email</h1>
-  <p class="muted">Enter your company email in the format <strong>firstname.lastname@carelon.com</strong>.</p>
+  <p class="muted">Enter your company email address in the format <strong>first.lastname@email.com</strong>.</p>
 </header>
 
 <form method="post" class="form" novalidate data-busy>
@@ -13,11 +13,11 @@
   <label class="field">
     <span class="field-label">Company Email Address</span>
     <span class="field-box">{{ icon("mail") }}
-      <input type="email" name="email" value="{{ email }}" placeholder="firstname.lastname@carelon.com"
-             autocomplete="email" spellcheck="false" required data-carelon>
+      <input type="email" name="email" value="{{ email }}" placeholder="first.lastname@email.com"
+             autocomplete="email" spellcheck="false" required data-company-email>
     </span>
   </label>
-  <p class="field-error" data-email-error hidden>Please enter a valid Carelon email address.</p>
+  <p class="field-error" data-email-error hidden>Please enter a valid company email address.</p>
   <button type="submit" class="btn btn-primary btn-block">Register Email &amp; Finish</button>
 </form>
 <form method="post" action="{{ url_for('auth.logout') }}" class="inline-form">
